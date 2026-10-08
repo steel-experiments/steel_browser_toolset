@@ -627,13 +627,13 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "anthropic" },
-    { name = "pillow" },
     { name = "playwright" },
     { name = "steel-sdk" },
 ]
 
 [package.dev-dependencies]
 dev = [
+    { name = "pillow" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "ruff" },
@@ -642,13 +642,13 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "anthropic", specifier = ">=1.12,<2" },
-    { name = "pillow", specifier = ">=12.3.0" },
     { name = "playwright", specifier = ">=1.50" },
     { name = "steel-sdk", specifier = ">=0.19.0" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "pillow", specifier = ">=12.3.0" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest-asyncio", specifier = ">=1.4.0" },
     { name = "ruff", specifier = ">=0.16.10" },

@@ -5,6 +5,11 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `zoom` makes Chrome draw the region again at the zoom scale, so small text is sharp. Before, it enlarged a normal
+  screenshot of the region, and the text became blurred. Pillow is no longer a runtime dependency.
+
 ## [0.1.0] - 2026-10-08
 
 ### Added

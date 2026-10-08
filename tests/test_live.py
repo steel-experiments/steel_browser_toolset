@@ -216,6 +216,21 @@ async def test_screenshot_and_zoom_sizes(browser):
     assert refused.get("is_error") is True
 
 
+async def test_zoom_redraws_the_region_sharp_on_a_scrolled_page(browser):
+    await load_playground(browser)
+    await page_value(
+        browser,
+        "window.scrollTo(0, 1000);"
+        " document.body.insertAdjacentHTML('beforeend', '<div style=\"position: fixed; left: 20px; top: 20px;"
+        " width: 3px; height: 3px; background: #000\"></div>')",
+    )
+    zoomed = image(await call(browser, "zoom", region=[0, 0, 320, 180])).convert("L")
+    # The square is at x 20..23 and y 20..23, so 80..92 at 4 times. A redrawn edge has no gray pixels between them.
+    row = [zoomed.getpixel((x, 86)) for x in range(70, 102)]
+    assert row.count(0) == 12, row
+    assert all(value in (0, 255) for value in row), row
+
+
 async def test_coordinate_outside_the_viewport_is_refused(browser):
     result = await call(browser, "left_click", target={"type": "coordinate", "x": 1280, "y": 10})
     assert result.get("is_error") is True and "outside" in text(result)

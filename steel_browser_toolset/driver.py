@@ -6,7 +6,6 @@ from __future__ import annotations
 import asyncio
 import base64
 import inspect
-import io
 import re
 from collections import deque
 from collections.abc import AsyncIterator, Callable
@@ -64,7 +63,6 @@ from anthropic.types.beta import (
     BetaBrowserWaitInput,
     BetaBrowserZoomInput,
 )
-from PIL import Image
 from playwright.async_api import (
     Browser,
     BrowserContext,
@@ -520,24 +518,33 @@ class SteelBrowser(BetaAsyncAbstractBrowserToolset20260801):
 
     @override
     async def zoom(self, context: BetaToolsetCallContext, input: BetaBrowserZoomInput) -> BetaScreenshotResult:
-        _, page = self._tab(input.tab_id)
+        tab_id, page = self._tab(input.tab_id)
         width, height = self._viewport
         if len(input.region) != 4:
             raise ToolError("region must be [x0, y0, x1, y1]")
         x0, y0, x1, y1 = input.region
         if not (0 <= x0 < x1 <= width and 0 <= y0 < y1 <= height):
             raise ToolError(f"region must be inside the {width}x{height} viewport, with x0 < x1 and y0 < y1")
-        png = await page.screenshot(
-            type="png", scale="css", clip={"x": x0, "y": y0, "width": x1 - x0, "height": y1 - y0}
+        # Scale the region up to fill at most the viewport size, and never more than 4 times. Chrome draws the region
+        # again at this scale, so small text stays sharp.
+        factor = max(min(width / (x1 - x0), height / (y1 - y0), 4.0), 1.0)
+        # The CDP clip is in page coordinates, and Chrome multiplies its scale by the device pixel ratio.
+        scroll_x, scroll_y, ratio = await page.evaluate("[window.scrollX, window.scrollY, window.devicePixelRatio]")
+        cdp = await self._cdp(tab_id)
+        shot = await cdp.send(
+            "Page.captureScreenshot",
+            {
+                "format": "png",
+                "clip": {
+                    "x": x0 + scroll_x,
+                    "y": y0 + scroll_y,
+                    "width": x1 - x0,
+                    "height": y1 - y0,
+                    "scale": factor / ratio,
+                },
+            },
         )
-        image = Image.open(io.BytesIO(png))
-        # Scale the region up to fill at most the viewport size, and never more than 4 times.
-        factor = min(width / image.width, height / image.height, 4.0)
-        if factor > 1:
-            image = image.resize((round(image.width * factor), round(image.height * factor)), Image.LANCZOS)
-        out = io.BytesIO()
-        image.save(out, format="PNG")
-        return BetaScreenshotResult(data=base64.b64encode(out.getvalue()).decode(), media_type="image/png")
+        return BetaScreenshotResult(data=shot["data"], media_type="image/png")
 
     async def _page_model(self, tab_id: str) -> tuple[list[dict[str, Any]], Any]:
         cdp = await self._cdp(tab_id)
