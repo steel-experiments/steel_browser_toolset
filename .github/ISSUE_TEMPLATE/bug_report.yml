@@ -1,0 +1,25 @@
+name: Bug report
+description: A tool call does the wrong thing, or the driver fails.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: The tool call (member and input), what you expected, and what you got.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: A short script or the steps, and the page if it is public. Do not paste API keys or session URLs.
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: steel_browser_toolset commit or version, anthropic, steel-sdk, playwright, Python.
+    validations:
+      required: true

@@ -1,0 +1,58 @@
+[project]
+name = "steel-browser-toolset"
+version = "0.1.0"
+description = "Run Claude's browser toolset on Steel cloud browsers."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [{ name = "steel.dev (Nen Labs)" }]
+requires-python = ">=3.12"
+keywords = ["anthropic", "claude", "browser", "toolset", "steel", "playwright", "agents"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP :: Browsers",
+    "Topic :: Software Development :: Libraries",
+    "Typing :: Typed",
+]
+dependencies = [
+    "anthropic>=1.12,<2",
+    "pillow>=12.3.0",
+    "playwright>=1.50",
+    "steel-sdk>=0.19.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/steel-experiments/steel_browser_toolset"
+Repository = "https://github.com/steel-experiments/steel_browser_toolset"
+Issues = "https://github.com/steel-experiments/steel_browser_toolset/issues"
+Changelog = "https://github.com/steel-experiments/steel_browser_toolset/blob/main/CHANGELOG.md"
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["steel_browser_toolset"]
+
+[tool.hatch.build.targets.sdist]
+include = ["steel_browser_toolset", "tests", "examples", "README.md", "LICENSE", "NOTICE", "CHANGELOG.md"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "ruff>=0.16.10",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+addopts = "-m 'not live'"
+markers = ["live: runs against a real Steel session and needs STEEL_API_KEY"]

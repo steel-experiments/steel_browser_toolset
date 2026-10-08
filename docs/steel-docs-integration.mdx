@@ -1,0 +1,84 @@
+---
+title: Run Claude's Browser Toolset on Steel
+sidebarTitle: Claude Browser Toolset
+description: Run Claude's browser toolset (browser_toolset_20260801) on Steel cloud browsers. The SteelBrowser driver runs each of the 31 browser tools on an isolated Steel session.
+llm: true
+isNew: true
+---
+
+Claude's [browser toolset](https://platform.claude.com/docs/en/agents-and-tools/tool-use/browser-use-sdk) gives the model 31 browser tools, such as `navigate`, `read_page`, `find`, `left_click`, `form_input` and `screenshot`. The Anthropic SDK supplies the tool schemas, the URL and file policies, the approval callback and the tool runner. It does not supply a browser. The `SteelBrowser` driver connects the toolset to a Steel cloud browser, so each tool call runs on an isolated Steel session with a live view and a replay.
+
+### Requirements
+
+*   **Steel API key**: from [app.steel.dev](https://app.steel.dev/settings/api-keys)
+*   **Anthropic API key**: from [platform.claude.com](https://platform.claude.com/settings/keys)
+*   **Python**: 3.12+
+
+Install the driver from GitHub:
+
+```bash
+uv add git+https://github.com/steel-experiments/steel_browser_toolset
+```
+
+### Connect Claude's browser toolset to Steel
+
+Pass a `SteelBrowser` in `tools`. It creates a Steel session on enter and releases it on exit:
+
+```python Python -wc
+from anthropic import AsyncAnthropic
+from steel import AsyncSteel
+from steel_browser_toolset import SteelBrowser, allowed_hosts_policy
+
+browser = SteelBrowser(
+    AsyncSteel(),
+    url_policy=allowed_hosts_policy(["example.com", "iana.org"]),
+    session_options={"use_proxy": True, "solve_captcha": True},
+)
+async with browser, AsyncAnthropic() as client:
+    print(browser.session.session_viewer_url)
+    runner = client.beta.messages.tool_runner(
+        model="claude-opus-5-5",
+        max_tokens=4096,
+        tools=[browser],
+        messages=[{"role": "user", "content": "Open example.com and summarize what the page says."}],
+    )
+    async for message in runner:
+        print(message)
+```
+
+Source, a runnable example and tests: [steel-experiments/steel_browser_toolset →](https://github.com/steel-experiments/steel_browser_toolset)
+
+### What Steel adds
+
+*   **Isolation**: each run gets its own cloud browser. Claude cannot reach your machine or your network through it.
+*   **URL policy on every request**: the SDK checks each `navigate`. The driver also checks the links, redirects and subresources the page loads, with the same policy.
+*   **Remote file uploads**: the SDK file policy checks each path on your machine. The driver sends the file to the session with the Steel Files API, then attaches it to the file input.
+*   **Downloads**: saved in the session and reported to Claude. Read them with `browser.download_bytes(download_id)`.
+*   **Dialogs and popups**: dialogs are dismissed and reported. Popups become the active tab.
+*   **Steel session options**: proxies, CAPTCHA solving, stealth, profiles and regions go in `session_options`.
+
+### FAQ
+
+:::faq
+### How is this different from Claude computer use on Steel?
+
+The [computer use integration](/integrations/claude-computer-use) sends screenshots and screen coordinates. The browser toolset also gives Claude the page structure: `read_page` and `find` return elements with `[ref_N]` tags, and Claude clicks or fills an element by its ref. It also has tabs, page text, console and network logs.
+
+### Which tools are on by default?
+
+27 of the 31 tools. `javascript_exec`, `file_upload`, `read_console` and `read_network` are off. Turn them on with `configs={"javascript_exec": {"enabled": True}}`. `javascript_exec` and `file_upload` also need a `confirm` callable that asks a person.
+
+### Can I use a Steel session I already created?
+
+Yes. Pass `session_id=session.id`. The driver does not release a session it did not create.
+
+### Does it work with the Browser Use toolset integration?
+
+`SteelBrowser` is a separate driver. It needs only the Anthropic SDK, Playwright and the Steel SDK.
+:::
+
+### Resources
+
+*   [Browser and computer use with the SDK toolsets](https://platform.claude.com/docs/en/agents-and-tools/tool-use/browser-use-sdk): the Anthropic guide
+*   [Browser use tool reference](https://platform.claude.com/docs/en/agents-and-tools/tool-use/browser-use-tool): the 31 tools and the `browser_state` block
+*   [Steel Discord](https://discord.gg/steel-dev): get help and share what you build

@@ -1,0 +1,19 @@
+<!doctype html>
+<title>Order form</title>
+<header><nav><a href="/home">Home</a> <a href="/help">Help</a></nav></header>
+<main>
+  <h1>Place an order</h1>
+  <p>Fill in the form to order steel beams.</p>
+  <form>
+    <label>Full name <input name="name" value="Ada"></label>
+    <label>Search catalog <input type="search" placeholder="Search products"></label>
+    <label><input type="checkbox" checked> Express shipping</label>
+    <label>Grade <select><option value="a36">A36</option><option value="a572" selected>A572</option></select></label>
+    <textarea aria-label="Notes"></textarea>
+    <button type="button">Add to cart</button>
+    <button type="submit" disabled>Submit order</button>
+  </form>
+  <div style="display:none"><button>Hidden button</button></div>
+  <div style="height:2000px"></div>
+  <footer><a href="/terms">Terms of service</a></footer>
+</main>

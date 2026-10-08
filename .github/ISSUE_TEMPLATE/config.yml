@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security report
+    url: https://github.com/steel-experiments/steel_browser_toolset/security/advisories/new
+    about: Report a vulnerability privately. Do not open a public issue.
+  - name: Steel Discord
+    url: https://discord.gg/steel-dev
+    about: Questions about Steel sessions, proxies and accounts.
